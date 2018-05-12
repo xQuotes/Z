@@ -47,6 +47,7 @@
 import Cookies from 'js-cookie';
 import util from '@/libs/util'
 import env from '@/config/env';
+import Api from '@/config/api'
 
 export default {
 
@@ -80,7 +81,7 @@ export default {
                 if (valid) {
                     let baseURL = env === 'development' ? 'http://localhost:8000' : '/';
                     baseURL = '/';
-                    util.ajax.post('/auth/api-auth/', {
+                    util.ajax.post(Api.login, {
                             email: that.form.email,
                             password: that.form.password
                         }, { baseURL })

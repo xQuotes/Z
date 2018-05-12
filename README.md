@@ -29,3 +29,9 @@
 ```
   src/libs/util.js L17-L20
 ```  
+
+
+## 启动可以跨域开发的 chrome
+```
+open -n /Applications/Google\ Chrome.app/ --args --disable-web-security  --user-data-dir=/Users/xq/MyChromeDevUserData/ --remote-debugging-port=9222
+```

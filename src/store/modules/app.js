@@ -3,6 +3,7 @@ import Util from '@/libs/util';
 import Cookies from 'js-cookie';
 import Vue from 'vue';
 import env from '@/config/env';
+import Api from '@/config/api';
 import _ from 'lodash';
 
 const app = {
@@ -22,9 +23,9 @@ const app = {
         }],
         currentPageName: '',
         currentPath: [{
-                title: '首页',
-                path: '',
-                name: 'home_index'
+            title: '首页',
+            path: '',
+            name: 'home_index'
         }], // 面包屑数组
         banner_header: '',
         menuList: [],
@@ -59,14 +60,14 @@ const app = {
                 if (_.includes(state.disableMenuPaths, item.path)) {
                     return false;
                 }
-                let _item = _.cloneDeep(item)
+                let _item = _.cloneDeep(item);
                 let childrenArr = _item.children.filter(child => {
                     if (state.is_admin || Util.includedThisRoute(item.path, child.path, state.menus)) {
                         return child;
                     } else if (_.includes(state.openMenuPaths, item.path)) {
                         return child;
                     }
-                })
+                });
                 _item.children = childrenArr;
 
                 if (childrenArr.length != 0){
@@ -191,8 +192,8 @@ const app = {
             if (state.menus.length == 0) {
                 let baseURL = env === 'development' ? 'http://localhost:8000' : '/';
                 baseURL = '/';
-                Util.ajax.post('/auth/auth-token-refresh/', {
-                        token: Cookies.get('token'),
+                Util.ajax.post(Api.authTokenRefresh, {
+                    token: Cookies.get('token'),
                 }, { baseURL })
                 .then(function (response) {
                     if (response.data.staff.is_active) {
@@ -205,7 +206,7 @@ const app = {
                         state.is_admin = false;
                     }
 
-                    this.commit('updateMenulist')
+                    this.commit('updateMenulist');
                     
                 }.bind(this))
                 .catch(function (error) {
