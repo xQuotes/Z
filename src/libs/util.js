@@ -296,6 +296,7 @@ util.createImgObjWithUrl = function (url) {
     });
 }
 
+<<<<<<< HEAD
 util.getImageUrlFromCode_old = function (code) {
     /*  e.g. code = GZ000790v030p0010005
         https://s3.cn-north-1.amazonaws.com.cn/lqcharacters-images/GZ/000790/v030/GZ000790v030p0010005.jpg
@@ -332,6 +333,8 @@ util.getPageImageUrlFromCode = function (page_code) {
     return url;
 }
 
+=======
+>>>>>>> a2e824e1fad0edaf03cc3cd70f9963040266010f
 util.getColumnImageUrlFromCode = function (column_code) {
     const regex = /^.*_.*/;
     if (regex.test(column_code)) {

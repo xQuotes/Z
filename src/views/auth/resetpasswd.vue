@@ -8,15 +8,15 @@
         <div class="header">
             <h1>
                 <span class="banner-logo">
-                    <img src="./img/logo-icon.jpg" key="min-logo" />
-                </span>龙泉大藏经校勘平台
+                    <img  src="../../images/logo-tra-b.png" key="max-logo"  />
+                </span>
             </h1>
         </div>
         <div class="main w">
             <div class="form">
                 <div class="hd">
                     <img class="l" src="./img/lline-v1.png" alt="">
-                    <h3>重置密码</h3>
+                    <h3>校勘平台 - 重置密码</h3>
                     <img class="r" src="./img/rline-v1.png" alt="">
                 </div>
                 <div class="bd">
@@ -72,7 +72,7 @@ export default {
             var regex = new RegExp('(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[^a-zA-Z0-9]).{8,30}');
             if (!regex.test(value)) {
                 // Complexity match checking
-                callback(new Error('密码长度为8-30，必须包含数字、大小写字母、特殊符号'))
+                callback(new Error('密码长度为8-30，必须包含数字、字母、特殊符号'))
             }
             callback();
         };
@@ -84,7 +84,7 @@ export default {
             }
         };
         const validateEmail = (rule, value, callback) => {
-            util.ajax.get('/auth/staff/exist_email?email='+value)
+            util.ajax.get('/auth/staff/exist_email/?email='+value)
             .then(function (response) {
                 if (response.data.status == -1) {
                     callback();
@@ -119,7 +119,7 @@ export default {
                     { validator: validateVericode, trigger: 'blur'}
                 ],
                 password: [
-                    { type: 'string', min: 6, required: true, message: this.$t('密码长度为8-30，必须包含数字、大小写字母、特殊符号') },
+                    { type: 'string', min: 6, required: true, message: this.$t('密码长度为8-30，必须包含数字、字母、特殊符号') },
                     { validator: validatePass, trigger: 'blur' }
                 ],
                 repassword: [
@@ -180,7 +180,7 @@ export default {
         handleSendVericode(event) {
             let that = this;
             var time_value = new Date().getTime();
-            util.ajax.get('/auth/staff/exist_email?email='+this.form.email)
+            util.ajax.get('/auth/staff/exist_email/?email='+this.form.email)
             .then(function (response) {
                 if (response.data.status == -1) {
                     

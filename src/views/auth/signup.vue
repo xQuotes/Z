@@ -1,6 +1,20 @@
 <style lang="css">
     @import './css/base.css';
     @import './css/user.css';
+    .popContainer{  
+    position: fixed;  
+    top: 0;  
+    left: 0;  
+    right: 0;  
+    bottom: 0;  
+    background: rgba(e,e,e,0.3);  
+    /* 垂直水平居中 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
 </style>
 
 <template>
@@ -8,15 +22,15 @@
         <div class="header">
             <h1>
                 <span class="banner-logo">
-                    <img src="./img/logo-icon.jpg" key="min-logo" />
-                </span>龙泉大藏经校勘平台
+                    <img  src="../../images/logo-tra-b.png" key="max-logo"  />
+                </span>
             </h1>
         </div>
         <div class="main w">
             <div class="form">
                 <div class="hd">
                     <img class="l" src="./img/lline-v1.png" alt="">
-                    <h3>用户注册</h3>
+                    <h3>校勘平台 - 注册</h3>
                     <img class="r" src="./img/rline-v1.png" alt="">
                 </div>
                 <div class="bd">
@@ -49,25 +63,34 @@
                 <div class="btn" @click="handleSubmit"><img src="././img/btn-v1.png" alt=""></div>
             </div>
         </div>
+        <div>
+            <div class='popContainer' v-show="showLoading">
+                <vue-loading type="spin" color="red" :size="{ width: '50px', height: '50px' }" style="position:fixed;"></vue-loading>
+            </div>
+        </div>
     </div>
+    
 </template>
 
 <script>
 import Cookies from 'js-cookie';
 import util from '@/libs/util'
 import config from '@/config/config.js';
-
+import { VueLoading } from 'vue-loading-template'
+import _ from 'lodash'
 let saved_username = Cookies.get('user');
 
 export default {
-
+    components: {
+        VueLoading
+    },
     data () {
 
         const validatePass = (rule, value, callback) => {
             var regex = new RegExp('(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[^a-zA-Z0-9]).{8,30}');
             if (!regex.test(value)) {
                 // Complexity match checking
-                callback(new Error('密码长度为8-30，必须包含数字、大小写字母、特殊符号'))
+                callback(new Error('密码长度为8-30，必须包含数字、字母、特殊符号'))
             }
             callback();
         };
@@ -79,7 +102,7 @@ export default {
             }
         };
         const validateEmail = (rule, value, callback) => {
-            util.ajax.get('/auth/staff/exist_email?email='+value)
+            util.ajax.get('/auth/staff/exist_email/?email='+value)
             .then(function (response) {
                 if (response.data.status == -1) {
                     callback(new Error('此邮箱已被注册.'));
@@ -92,12 +115,17 @@ export default {
             });
         };
         const validateUsername = (rule, value, callback) => {
+            let arr = ['admin'];
+            if (_.find(arr, function(r) {return r == value})) {
+                callback(new Error('不可使用该用户名。'));
+            }
+
             var regex = new RegExp('^(?=.*[-_a-zA-Z0-9]).{5,10}$');
             if (!regex.test(value)) {
                 // Complexity match checking
                 callback(new Error('用户名必须只包括数字、字母、连字号或下划线，长度在5-10之间'))
             }
-            util.ajax.get('/auth/staff/exist_username?username='+value)
+            util.ajax.get('/auth/staff/exist_username/?username='+value)
             
             .then(function (response) {
                 if (response.data.status == -1) {
@@ -107,10 +135,11 @@ export default {
                 }
             })
             .catch(function (error) {
-                callback(new Error('无法查询用户名.'));
+                callback(new Error('无法连接服务器。'));
             });
         };
         return {
+            showLoading:false,
             form: {
                 username: '',
                 email: saved_username,
@@ -127,7 +156,7 @@ export default {
                     { validator: validateEmail, trigger: 'blur' }
                 ],
                 password: [
-                    { type: 'string', min: 6, required: true, message: this.$t('password required') },
+                    { type: 'string', min: 0, required: true, message: this.$t('password required') },
                     { validator: validatePass, trigger: 'blur' }
                 ],
                 repassword: [
@@ -145,19 +174,17 @@ export default {
             let that = this;
             this.$refs.regForm.validate((valid) => {
                 if (valid) {
+                    that.showLoading = true;
                     util.ajax.post('/auth/api-register/', {
                             username: that.form.username,
                             email: that.form.email,
                             password: that.form.password
                     })
                     .then(function (response) {
-                        that.$Notice.success({
-                            title: '注册完成，请重新登录。',
-                            desc: ''
-                        });
-                        that.gotoLogin();
+                        that.handleSendVericode(event);
                     })
                     .catch(function (error) {
+                        that.showLoading = false;
                         if (error.response.data.msg) {
                             that.$Notice.error({
                             title: that.$t('Failed'),
@@ -173,6 +200,78 @@ export default {
                     });
                 }
             });
+        },
+        handleSendVericode(event) {
+            let that = this;
+            var time_value = new Date().getTime();
+            util.ajax.get('/auth/staff/exist_email/?email='+this.form.email)
+            .then(function (response) {
+                if (response.data.status == -1) {
+                    
+                    util.ajax.post('/auth/api-vericode/', {
+                            code:200,
+                            email: that.form.email,
+                            username: that.form.username,
+                            send_type:'register',
+                            send_time:that.get_format_time()
+                    })
+                    .then(function (response) {
+                        that.$Notice.success({
+                            title: '激活链接已发送至邮箱，请查收。',
+                            desc: ''
+                        });
+                        that.gotoLogin();
+                        that.showLoading = false;
+                    })
+                    .catch(function (error) {
+                        that.$Notice.error({
+                            title: '激活链接发送失败了，请重试。',
+                            desc: error.message
+                        });
+                        that.showLoading = false;
+                    });
+                } else {
+                    that.$Notice.error({
+                        title: that.$t('邮箱不合法。'),
+                        desc: ''
+                    });
+                }
+            })
+            .catch(function (error) {
+                callback();
+                that.$Notice.error({
+                    title: that.$t('请求参数不合法。'),
+                    desc: ''
+                });
+                that.showLoading = false;
+            });
+        },
+        get_format_time(){//获取当前时间，格式必须和后台要求的一致。
+            let myDate = new Date();
+
+            let Y = myDate.getFullYear(),
+                M = myDate.getMonth() + 1,
+                D = myDate.getDate() + 1,
+                H = myDate.getHours(),
+                Min = myDate.getMinutes(),
+                S = myDate.getSeconds();
+
+            if(M < 10){
+                M = '0' + M ;
+            }
+            if(D < 10){
+                D = '0' + D ;
+            }
+            if(H < 10){
+                H = '0' + H ;
+            }
+            if(Min < 10){
+                Min = '0' + Min ;
+            }
+            if(S < 10){
+                S = '0' + S ;
+            }
+            return Y + '-' + M + '-' + D + ' ' + H + ':' + Min + ':' + S;
         },
         gotoLogin() {
              this.$router.push({

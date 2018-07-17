@@ -8,15 +8,15 @@
         <div class="header">
             <h1>
                 <span class="banner-logo">
-                    <img src="./img/logo-icon.jpg" key="min-logo" />
-                </span>龙泉大藏经校勘平台
+                    <img  src="../../images/logo-tra-b.png" key="max-logo"  />
+                </span>
             </h1>
         </div>
         <div class="main w">
             <div class="form">
                 <div class="hd">
                     <img class="l" src="./img/lline-v1.png" alt="">
-                    <h3>登录</h3>
+                    <h3>校勘平台 - 登录</h3>
                     <img class="r" src="./img/rline-v1.png" alt="">
                 </div>
                 <div class="bd">
@@ -57,7 +57,8 @@ export default {
         return {
             form: {
                 email: saved_username,
-                password: ''
+                password: '',
+                username: ''
             },
             rules: {
                 email: [
@@ -75,9 +76,9 @@ export default {
     },
     methods: {
         handleSubmit () {
-            console.log('handleSubmit');
+            
             let that = this;
-            this.$refs.loginForm.validate((valid) => {
+            that.$refs.loginForm.validate((valid) => {
                 if (valid) {
                     let baseURL = env === 'development' ? 'http://localhost:8000' : '/';
                     baseURL = '/';
@@ -92,7 +93,7 @@ export default {
                         that.handleFailure(error);
                     });
                 }
-            });
+            }); 
         },
 
         handleSuccess(response) {
@@ -100,8 +101,9 @@ export default {
 
                 let staff = response.data.staff;
                 Cookies.set('user', staff.email);
+                Cookies.set('username', staff.username);
                 // Cookies.set('last_login', response.data.staff.last_login);
-
+                this.$store.commit('setUserName', staff.username);
                 if (this.keepLogin) {
                     Cookies.set('token', response.data.token, { expires: 7 });
                 } else {
@@ -109,8 +111,6 @@ export default {
                 }
                 this.$store.commit('setMenus', staff.menus);
                 this.$store.commit('setAdmin', staff.is_admin);
-
-                this.$store.commit('setAvator', 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3448484253,3685836170&fm=27&gp=0.jpg');
 
                 this.$router.push({
                     name: 'otherRouter'
@@ -130,13 +130,16 @@ export default {
             let message = this.$t(error.message);
             if (error.response && error.response.status == 400) {
                 message = error.response.data.non_field_errors;
-
+            }
+            if (message == '无法使用提供的认证信息登录。'){
+                message = "用户名或密码错误";
             }
             this.$Notice.error({
                 title: this.$t('Failed'),
                 desc: message
             });
-        }
+        },
+        
     }
 };
 </script>

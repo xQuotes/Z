@@ -3,7 +3,7 @@
 </style>
 <template>
     <div class="main" :class="{'main-hide-text': shrink}">
-        <div class="sidebar-menu-con" :style="{width: shrink?'60px':'200px', overflow: shrink ? 'visible' : 'auto'}">
+        <div class="sidebar-menu-con" :style="{width: shrink?'60px':'200px', overflowY: shrink ? 'visible' : 'auto', overflowX: 'hidden'}">
             <shrinkable-menu
                 ref="shrinkmenu"
                 :shrink="shrink"
@@ -31,20 +31,20 @@
                         <Icon type="ios-person-outline" size="32" style="margin-right: 8px;"></Icon>
                         <Dropdown transfer trigger="click" @on-click="handleClickUserDropdown">
                             <a href="javascript:void(0)">
-                                <span class="main-user-name">{{ userName }}</span>
+                                <span class="main-user-name">{{ username }}</span>
                                 <Icon type="arrow-down-b"></Icon>
                             </a>
                             <DropdownMenu slot="list">
-<!--                                 <DropdownItem name="ownSpace"><Icon size="28"  type="ios-personadd" style="margin-right: 8px;"></Icon>个人中心</DropdownItem> -->
+                                <DropdownItem name="personalCenter"><Icon size="28"  type="ios-personadd" style="margin-right: 8px;"></Icon>修改信息</DropdownItem>
                                 <DropdownItem name="loginout" divided><Icon size="28"  type="android-exit" style="margin-right: 8px;"></Icon>退出登录</DropdownItem>
                             </DropdownMenu>
                         </Dropdown>
                     </Row>
                 </div>
                 <div class="header-avator-con">
+                    <message-tip v-show="false" v-model="mesCount"></message-tip>
                     <full-screen v-model="isFullScreen" @on-change="fullscreenChange"></full-screen>
                     <!-- <lock-screen></lock-screen> -->
-                    <!-- <message-tip v-model="mesCount"></message-tip> -->
                 </div>
                 </Row>
                 <Row>
@@ -85,6 +85,7 @@
     import messageTip from './main-components/message-tip.vue';
     import themeSwitch from './main-components/theme-switch/theme-switch.vue';
     import Cookies from 'js-cookie';
+    import {mapState} from "vuex";
     import { on, off } from 'iview/src/utils/dom';
     import util from '@/libs/util.js';
 
@@ -98,11 +99,12 @@
             messageTip,
         },
         data () {
+            
             return {
                 topHeight: 95,
                 shrink: false,
                 content_height: 0,
-                userName: '',
+                email:'',
                 isFullScreen: false,
                 openedSubmenuArr: this.$store.state.app.openedSubmenuArr,
             };
@@ -134,7 +136,11 @@
             },
             bannerHeader() {
                 return this.$store.state.app.banner_header;
-            }
+            },
+            ...mapState({
+                username: state => state.app.username,
+            }) 
+
         },
         methods: {
             init () {
@@ -143,7 +149,6 @@
                 if (pathArr.length >= 2) {
                     this.$store.commit('addOpenSubmenu', pathArr[1].name);
                 }
-                this.userName = Cookies.get('user');
                 let messageCount = 3;
                 this.messageCount = messageCount.toString();
                 this.checkTag(this.$route.name);
@@ -153,10 +158,10 @@
                 this.shrink = !this.shrink;
             },
             handleClickUserDropdown (name) {
-                if (name === 'ownSpace') {
-                    util.openNewPage(this, 'ownspace_index');
+                if (name === 'personalCenter') {
+                    util.openNewPage(this, 'personalcenter');
                     this.$router.push({
-                        name: 'ownspace_index'
+                        name: 'personal_center'
                     });
                 } else if (name === 'loginout') {
                     // 退出登录
@@ -198,7 +203,8 @@
                 } else {
                     this.content_height = window.innerHeight - this.topHeight;
                 }
-            }
+            },
+            
         },
         watch: {
             '$route' (to) {
@@ -212,12 +218,15 @@
             },
             lang () {
                 util.setCurrentPath(this, this.$route.name); // 在切换语言时用于刷新面包屑
-            }
+            },
+            
         },
         mounted () {
             this.init();
             this.content_height = window.innerHeight - this.topHeight;
             on(window, 'resize', this.handleResize);
+            
+
         },
         beforeDestroy () {
             off(window, 'resize', this.handleResize);

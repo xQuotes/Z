@@ -52,4 +52,6 @@ node_modules/
 jscoverage_lib/  
 bower_components/  
 dist/
-
+.vscode
+yarn-error.log
+build/index_prod.html
